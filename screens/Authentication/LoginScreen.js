@@ -15,10 +15,13 @@ import { MaterialIcons } from "@expo/vector-icons";
 import * as Yup from "yup";
 import userService from "../../api/userService";
 import Loader from "../../components/Loader";
+import { useDispatch } from "react-redux";
+import { setUserInfo } from "../../slices/authSlice";
+import { setVariable } from "../../services/AsyncStorageMethods";
 
 function LoginScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
-
+  const dispatch = useDispatch();
   const validationSchema = Yup.object().shape({
     email: Yup.string().email().required(),
     password: Yup.string().min(6).required(),
@@ -35,6 +38,9 @@ function LoginScreen({ navigation }) {
       setLoading(false);
       if (res.statusCode == 200) {
         console.log(res.data);
+        const userInfo = {...res.data.userInformation};
+        setVariable(userInfo, "userInfo");
+        dispatch(setUserInfo(userInfo))
       } else {
         Alert.alert(res.message);
       }
