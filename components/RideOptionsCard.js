@@ -39,6 +39,7 @@ const RideOptionsCard = () => {
     const [selected, setSelected] = useState(null);
     const travelTimeInformation = useSelector(selectTravelTimeInformation);
 
+
     return (
         <SafeAreaView style={tw`bg-white flex-grow`}>
             <View>
@@ -71,17 +72,7 @@ const RideOptionsCard = () => {
                             <Text>{travelTimeInformation?.duration?.text} Travel Time</Text>
                         </View>
                         <Text style={tw`text-xl`}>
-
-                            {new Intl.NumberFormat('en-gb', {
-                                style: 'currency',
-                                currency: 'GBP'
-                            }).format(
-
-                                (travelTimeInformation?.duration.value * SURGE_CHARGE_RATE
-                                    * multiplier) / 100
-
-                            )}
-
+                            XAF
                         </Text>
                     </TouchableOpacity>
                 )}
