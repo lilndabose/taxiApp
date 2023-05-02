@@ -27,7 +27,6 @@ function Main() {
   }
 
   if (user) {
-    console.log("user", user)
     return <RootStack userType={user.driver} />;
   }
 

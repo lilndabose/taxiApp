@@ -4,7 +4,7 @@ import { createStackNavigator } from "@react-navigation/stack";
 import MapScreen from "../screens/MapScreen";
 import LoginScreen from "../screens/Authentication/LoginScreen";
 import RegisterScreen from "../screens/Authentication/RegisterScreen";
-import { View } from "react-native";
+import { Text, View } from "react-native";
 
 const Stack = createStackNavigator();
 
@@ -41,9 +41,9 @@ function DriverStack() {
 
 function RootStack(userType) {
     if (userType.userType) {
-        <DriverStack />
+        return <DriverStack />
     }else{
-        <UserStack />
+        return <UserStack />
     }
 }
 
