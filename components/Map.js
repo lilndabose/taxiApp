@@ -18,7 +18,6 @@ import {
 } from "../slices/navSlice";
 import MapView, { Marker } from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
-import { GOOGLE_MAPS_APIKEY } from "@env";
 import { useRef } from "react";
 import { useEffect } from "react";
 import { CurrentLocation } from "../helpers/CurrentLocation";
@@ -27,6 +26,9 @@ import userService from "../api/userService";
 import { ScrollView } from "react-native-gesture-handler";
 import { MaterialIcons } from "@expo/vector-icons";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
+import SearchLocation from "./SearchLoaction";
+import BookRide from "./BookRide";
+import { GOOGLE_MAPS_APIKEY } from "@env";
 
 const Map = () => {
   const origin = useSelector(selectOrigin);
@@ -35,6 +37,9 @@ const Map = () => {
   const dispatch = useDispatch();
   const [drivers, setDrivers] = useState([]);
   const [loading, setLoading] = useState([]);
+  const [startLocation, setStartLocation] = useState(null);
+  const [destinationLocation, setDestinationLocation] = useState(null);
+  const [step, setStep] = useState(1);
 
   const getAllDrivers = () => {
     setLoading(true);
@@ -56,13 +61,16 @@ const Map = () => {
         lng: response.coords.longitude,
         lat: response.coords.latitude,
       };
-      dispatch(setOrigin({ location: temPosition }));
+      setStartLocation({location: temPosition});
     });
   }, []);
 
   useEffect(() => {
-    console.log(!!origin?.location);
-  }, [origin]);
+    console.log("startLocation", startLocation);
+  }, [startLocation]);
+  useEffect(() => {
+    console.log("destinationLocation", destinationLocation);
+  }, [destinationLocation]);
 
   //   useEffect(() => {
   //     if (!origin || !destination) return;
@@ -90,7 +98,7 @@ const Map = () => {
 
   return (
     <View style={tw`flex-1`}>
-      {!!!origin?.location || loading ? (
+      {!(!!startLocation) || loading ? (
         <Loader />
       ) : (
         <MapView
@@ -98,20 +106,19 @@ const Map = () => {
           style={tw`flex-1`}
           mapType="mutedStandard"
           initialRegion={{
-            latitude: origin?.location.lat,
-            longitude: origin?.location.lng,
+            latitude: startLocation?.location.lat,
+            longitude: startLocation?.location.lng,
             latitudeDelta: 0.005,
             longitudeDelta: 0.005,
           }}
         >
-          {origin?.location && (
+          {!!startLocation?.location && (
             <Marker
               coordinate={{
-                latitude: origin?.location.lat,
-                longitude: origin?.location.lng,
+                latitude: startLocation?.location.lat,
+                longitude: startLocation?.location.lng,
               }}
               title="Origin"
-              description={origin.description}
               identifier="origin"
             >
               <Image
@@ -119,6 +126,16 @@ const Map = () => {
                 style={{ width: 40, height: 40 }}
               />
             </Marker>
+          )}
+          {!!destinationLocation?.location && (
+            <Marker
+              coordinate={{
+                latitude: destinationLocation?.location.lat,
+                longitude: destinationLocation?.location.lng,
+              }}
+              title="Destination"
+              identifier="Destination"
+            />
           )}
           {drivers.map((item) => (
             <Marker
@@ -136,60 +153,71 @@ const Map = () => {
               />
             </Marker>
           ))}
-          {/* {origin && destination && (
-        <MapViewDirections
-          origin={origin.description}
-          destination={destination.description}
-          apikey={GOOGLE_MAPS_APIKEY}
-          strokeWidth={3}
-          strokeColor="black"
-        />
-      )}
+          {!!destinationLocation?.description && !!startLocation?.description && step == 2 && (
+            <MapViewDirections
+              origin={startLocation.description}
+              destination={destinationLocation.description}
+              apikey={GOOGLE_MAPS_APIKEY}
+              strokeWidth={3}
+              strokeColor="blue"
+            />
+          )}
 
-
-      {destination?.location && (
-        <Marker
-          coordinate={{
-            latitude: destination.location.lat,
-            longitude: destination.location.lng,
-          }}
-          title="Origin"
-          description={destination.description}
-          identifier="destination"
-        />
-      )} */}
+          {/* {destination?.location && (
+            <Marker
+              coordinate={{
+                latitude: destination.location.lat,
+                longitude: destination.location.lng,
+              }}
+              title="Origin"
+              description={destination.description}
+              identifier="destination"
+            />
+          )} */}
         </MapView>
       )}
       <View style={styles.BottomSheet}>
-        {/* <View style={styles.searchContainer}>
-          <MaterialIcons name="search" size={30} color={"gray"} />
-        </View> */}
-        <ScrollView>
-          <GooglePlacesAutocomplete
-            placeholder="Type your address here"
-            styles={styles.searchContainer}
-            onPress={(data, details = null) => {
-              //   dispatch(
-              //     setOrigin({
-              //       location: details.geometry.location,
-              //       description: data.description,
-              //     })
-              //   );
-              //   dispatch(setDestination(null));
-              console.log("data", data);
-            }}
-            fetchDetails={true}
-            returnKeyType={"search"}
-            enablePoweredByContainer={false}
-            minLength={2}
-            query={{
-              key: GOOGLE_MAPS_APIKEY,
-              language: "en",
-            }}
-            nearbyPlacesAPI="GooglePlacesSearch"
-            debounce={400}
-          />
-        </ScrollView>
+        {step === 1 ? (
+          <ScrollView>
+            <View>
+              <TouchableOpacity
+                onPress={() => setStep(step + 1)}
+                style={styles.currentLocation}
+              >
+                <MaterialIcons name="chevron-right" size={25} />
+              </TouchableOpacity>
+              <SearchLocation
+                setLocation={setStartLocation}
+                placeholder="Type your address here"
+              />
+            </View>
+          </ScrollView>
+        ) : null}
+        {step === 2 ? (
+          <ScrollView>
+            <View>
+              <TouchableOpacity
+                onPress={() => setStep(step + 1)}
+                style={styles.currentLocation}
+              >
+                <MaterialIcons name="chevron-right" size={25} />
+              </TouchableOpacity>
+              <SearchLocation
+                setLocation={setDestinationLocation}
+            placeholder="Type Your destination"
+              />
+            </View>
+          </ScrollView>
+        ) : null}
+        {step === 3 ? <BookRide /> : null}
+        {step > 1 ? (
+          <TouchableOpacity
+            onPress={() => setStep(step - 1)}
+            style={styles.backIcon}
+          >
+            <MaterialIcons name="chevron-left" size={25} />
+          </TouchableOpacity>
+        ) : null}
       </View>
     </View>
   );
@@ -203,7 +231,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     width: "100%",
     bottom: 0,
-    height: "33%",
+    height: "40%",
     borderTopEndRadius: 30,
     borderTopLeftRadius: 30,
     padding: 20,
@@ -212,6 +240,37 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.1)",
     padding: 10,
     borderRadius: 50,
-    borderWidth: 1
+    borderWidth: 1,
+  },
+  currentLocation: {
+    position: "absolute",
+    zIndex: 1000,
+    backgroundColor: "white",
+    borderRadius: 50,
+    width: 35,
+    height: 35,
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    right: 5,
+    top: 5,
+  },
+  backIcon: {
+    position: "absolute",
+    zIndex: 2000,
+    backgroundColor: "rgba(0,0,0,0.1)",
+    borderRadius: 50,
+    width: 35,
+    height: 35,
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    top: 10,
+    left: 10,
+  },
+  step2Container: {
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "center",
   },
 });
