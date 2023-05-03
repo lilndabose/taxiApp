@@ -1,4 +1,5 @@
 import HomeScreen from "../screens/HomeScreen";
+import DriverHomeScreen from "../screens/DriverHomeScreen";
 import "react-native-gesture-handler";
 import { createStackNavigator } from "@react-navigation/stack";
 import MapScreen from "../screens/MapScreen";
@@ -12,18 +13,15 @@ const Stack = createStackNavigator();
 
 function DriverStack() {
   return (
-    <View>
-      <Text>HEllo this is driver Stack</Text>
-      <Text>HEllo this is driver Stack</Text>
-      <Text>HEllo this is driver Stack</Text>
-      <TouchableOpacity
-        onPress={() => {
-          setVariable(null, "userInfo");
+    <Stack.Navigator>
+      <Stack.Screen
+        name="DriverHomeScreen"
+        component={DriverHomeScreen}
+        options={{
+          headerShown: false,
         }}
-      >
-        <Text>logout </Text>
-      </TouchableOpacity>
-    </View>
+      />
+    </Stack.Navigator>
   );
 }
 

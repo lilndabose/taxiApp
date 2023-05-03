@@ -192,9 +192,23 @@ const findUser = async (uid) => {
     return apiResponse(400, "Sorry the user does not exist");
   }
 };
+
+const updateDevice = async (data) => {
+  try {
+      const docRef = doc(db, 'users', data.id);
+      await updateDoc(docRef, data);
+      return apiResponse(200, "User profile successfully updated")
+  } catch (error) {
+      console.log("updateUserCollection Error: ", error);
+      return apiResponse(400, "Sorry there was an error updating user")
+  }
+}
+
+
 export default {
   addUser,
   loginUser,
+  updateDevice,
   updateAuthUser,
   updateUserCollection,
   updateUserPassword,
