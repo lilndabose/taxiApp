@@ -11,61 +11,7 @@ import { async } from "@firebase/util";
 import userService from "../api/userService";
 import Visible from "../components/Visible";
 
-// function Visible() {
-//   useEffect(() => {
-//     setInterval(async () => {
-//       await CurrentLocation().then(async (response) => {
-//         if (
-//           response.coords.longitude == userInfo?.position?.longitude &&
-//           response.coords.latitude == userInfo?.position?.latitude
-//         ) {
-//           console.log("the same");
-//         } else {
-//           // storedInformation.address = response.address[0]
-//           var temPosition = {
-//             longitude: response.coords.longitude,
-//             latitude: response.coords.latitude,
-//           };
-//           let data = {};
-//           if (visibility) {
-//             data = {
-//               ...userInfo,
-//               position: temPosition,
-//               visibility: true,
-//             };
-//           } else {
-//             data = {
-//               ...userInfo,
-//               position: temPosition,
-//               visibility: false,
-//             };
-//           }
-
-//           var res = await userService.updateDevice(data);
-
-//           if (res.statusCode === 200) {
-//             console.log("ok", data);
-//             dispatch(setUserInfo(data));
-//           }
-//         }
-//       });
-//     }, 5000);
-//   }, []);
-//   return (
-//     <View>
-//       <ActivityIndicator size={150} color="blue" />
-//       <Text style={tw`self-center mt-20 text-2xl font-bold`}>
-//         Waiting for Booking
-//       </Text>
-//       <TouchableOpacity onPress={() => setVisibility(!visibility)}>
-//         <Text style={tw`self-center text-black`}>Stop</Text>
-//       </TouchableOpacity>
-//     </View>
-//   );
-// }
-
 function DriverHomeScreen() {
-  const dispatch = useDispatch();
   const [visibility, setVisibility] = useState(false);
   const userInfo = useSelector(selectAuthUser);
 

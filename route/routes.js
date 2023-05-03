@@ -6,8 +6,7 @@ import MapScreen from "../screens/MapScreen";
 import LoginScreen from "../screens/Authentication/LoginScreen";
 import RegisterScreen from "../screens/Authentication/RegisterScreen";
 import LandingScreen from "../screens/Authentication/LandingScreen";
-import { Text, TouchableOpacity, View } from "react-native";
-import { setVariable } from "../services/AsyncStorageMethods";
+import UserHomeScreen from "../screens/UserHomeScreen";
 
 const Stack = createStackNavigator();
 
@@ -28,6 +27,13 @@ function DriverStack() {
 function UserStack() {
   return (
     <Stack.Navigator>
+      <Stack.Screen
+        name="UserHomeScreen"
+        component={UserHomeScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
       <Stack.Screen
         name="HomeScreen"
         component={HomeScreen}

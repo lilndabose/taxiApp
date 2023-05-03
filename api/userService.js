@@ -20,6 +20,7 @@ import {
 import { getAuth } from "firebase/auth";
 import { randomString } from "../services/AES";
 import { setVariable } from "../services/AsyncStorageMethods";
+import { async } from "@firebase/util";
 
 const db = getFirestore(app);
 const addUser = async (userData) => {
@@ -93,16 +94,13 @@ const loginUser = async (userData) => {
     const querySnapshot = await getDocs(collection(db, "users"));
     var userInformation = null;
     querySnapshot.forEach((doc) => {
-      if (
-        doc.data().email == userData.email &&
-        doc.data().id == user.uid
-      ) {
+      if (doc.data().email == userData.email && doc.data().id == user.uid) {
         exist = true;
         userInformation = doc.data();
       }
     });
     if (exist) {
-      return apiResponse(200, "Login Successfully", {userInformation, user});
+      return apiResponse(200, "Login Successfully", { userInformation, user });
     } else {
       return apiResponse(422, "Wrong credentials", userData);
     }
@@ -195,15 +193,30 @@ const findUser = async (uid) => {
 
 const updateDevice = async (data) => {
   try {
-      const docRef = doc(db, 'users', data.id);
-      await updateDoc(docRef, data);
-      return apiResponse(200, "User profile successfully updated")
+    const docRef = doc(db, "users", data.id);
+    await updateDoc(docRef, data);
+    return apiResponse(200, "User profile successfully updated");
   } catch (error) {
-      console.log("updateUserCollection Error: ", error);
-      return apiResponse(400, "Sorry there was an error updating user")
+    console.log("updateUserCollection Error: ", error);
+    return apiResponse(400, "Sorry there was an error updating user");
   }
-}
+};
 
+const getDrivers = async () => {
+  try {
+    var drivers = [];
+    const querySnapshot = await getDocs(collection(db, "users"));
+    querySnapshot.forEach((doc) => {
+      if (doc.data().visibility) {
+        drivers.push(doc.data());        
+      }
+    });
+    return apiResponse(200, "driver listed successfully", drivers);
+  } catch (error) {
+    console.log("Cant list drivers", error);
+    return apiResponse(400, "Cant list drivers", error);
+  }
+};
 
 export default {
   addUser,
@@ -213,4 +226,5 @@ export default {
   updateUserCollection,
   updateUserPassword,
   findUser,
+  getDrivers,
 };

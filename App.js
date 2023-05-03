@@ -11,16 +11,9 @@ export default function App() {
     <Provider store={store}>
       <NavigationContainer>
         <SafeAreaProvider>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "android" ? "padding" : "height"}
-          style={{ flex: 1 }}
-          keyboardVerticalOffset={Platform.OS === "ios" ? -64 : 0 }
-        >
-        <Main />
-        </KeyboardAvoidingView>
+          <Main />
         </SafeAreaProvider>
       </NavigationContainer>
     </Provider>
   );
 }
-

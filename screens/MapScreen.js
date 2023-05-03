@@ -13,7 +13,6 @@ import { TouchableOpacity } from "react-native-gesture-handler";
 const MapScreen = () => {
         const Stack = createStackNavigator();
         const navigation = useNavigation();
-
     return (
         <View>
             <TouchableOpacity
