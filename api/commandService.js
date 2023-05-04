@@ -16,6 +16,7 @@ import {
   where,
   setDoc,
   getDoc,
+  deleteDoc,
 } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { randomString } from "../services/AES";
@@ -61,4 +62,17 @@ const updateCommand = async (data) => {
     return apiResponse(400, "Sorry there was an error updating user");
   }
 };
-export default { addCommand, updateCommand };
+
+const deleteCommand = async (data) => {
+  
+  try {
+    const docRef = doc(db, "commands", data.id);
+    await deleteDoc(docRef, data);
+    return apiResponse(200, "command successfully deleted", data);
+  } catch (error) {
+    console.log("updateUserCollection Error: ", error);
+    return apiResponse(400, "Sorry there was an error updating user");
+  }
+}
+
+export default { addCommand, updateCommand, deleteCommand };

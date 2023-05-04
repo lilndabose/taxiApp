@@ -1,15 +1,32 @@
-import React, { useRef, useState } from "react";
-import { Button, StyleSheet, Text, TouchableOpacity } from "react-native";
+import React, { useLayoutEffect, useRef, useState } from "react";
+import {
+  Button,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+} from "react-native";
 import { View } from "react-native";
 import Loader from "../components/Loader";
-import MapView from "react-native-maps";
+import MapView, { Marker } from "react-native-maps";
 import { MaterialIcons } from "@expo/vector-icons";
-import { setVariable } from "../services/AsyncStorageMethods";
+import { getVariable, setVariable } from "../services/AsyncStorageMethods";
 import * as Print from "expo-print";
 import { shareAsync } from "expo-sharing";
 import tw from "tailwind-react-native-classnames";
 import { setUserInfo } from "../slices/authSlice";
 import { useDispatch } from "react-redux";
+import commandService from "../api/commandService";
+import {
+  collection,
+  addDoc,
+  orderBy,
+  query,
+  onSnapshot,
+} from "firebase/firestore";
+import { auth, database } from "../firebase";
+import MapViewDirections from "react-native-maps-directions";
+import { GOOGLE_MAPS_APIKEY } from "@env";
 
 const html = `
 <!DOCTYPE html>
@@ -62,13 +79,14 @@ const html = `
 </html>
 `;
 
-function TrackingScreen({ route }) {
-//   const { command } = route.params;
-//   console.log("command", route.params);
+function TrackingScreen({ route, navigation }) {
+  const { command } = route.params;
+  console.log("command", route.params);
   const [selectedPrinter, setSelectedPrinter] = useState();
-  const [show, setShow] = useState(false)
+  const [completed, setCompleted] = useState(false);
+  const [show, setShow] = useState(false);
   const dispatch = useDispatch();
-  
+
   const mapref = useRef(null);
 
   const print = async () => {
@@ -89,120 +107,168 @@ function TrackingScreen({ route }) {
     const printer = await Print.selectPrinterAsync(); // iOS only
     setSelectedPrinter(printer);
   };
+  const [loading, setLoading] = useState(false);
+
+  const setAsCompleted = async () => {
+    setLoading(true);
+    try {
+      var datas = {
+        ...command,
+        status: "completed",
+      };
+      var res = await commandService.updateCommand(datas);
+      setLoading(false);
+      if (res.statusCode == 200) {
+        setCompleted(true);
+      } else {
+        Alert.alert(res.message);
+      }
+    } catch (error) {
+      setLoading(false);
+      console.log("error.message", error.message);
+    }
+  };
+
+  useLayoutEffect(async () => {
+    const userInfo = await getVariable("userInfo");
+    const collectionRef = collection(database, "commands");
+    const q = query(collectionRef);
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      let exit = false;
+      snapshot.docs.map((doc) => {
+        if (
+          doc?.data().userId === userInfo.id ||
+          doc?.data().driverId === userInfo.id
+        ) {
+          if (doc?.data().status === "completed") {
+            setCompleted(true);
+          }
+          exit = true;
+        }
+      });
+
+      if (!exit) {
+        navigation.goBack();
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   return (
     <View>
-        {false ? (
-          <Loader />
-        ) : (
-          <MapView
-            ref={mapref}
-            style={tw`h-full`}
-            mapType="mutedStandard"
-            initialRegion={{
-              //   latitude: command.startLocation?.location.lat,
-              latitude: 3.8078893,
-              //   longitude: command.startLocation?.location.lng,
-              longitude: 11.5560279,
-              latitudeDelta: 0.005,
-              longitudeDelta: 0.005,
-            }}
-          >
-            {/* {!!startLocation?.location && (
-              <Marker
-                coordinate={{
-                  latitude: startLocation?.location.lat,
-                  longitude: startLocation?.location.lng,
-                }}
-                title="Origin"
-                identifier="origin"
-              >
-                <Image
-                  source={require("../assets/pin.png")}
-                  style={{ width: 40, height: 40 }}
-                />
-              </Marker>
-            )}
-            {!!destinationLocation?.location && (
-              <Marker
-                coordinate={{
-                  latitude: destinationLocation?.location.lat,
-                  longitude: destinationLocation?.location.lng,
-                }}
-                title="Destination"
-                identifier="Destination"
+      {loading ? (
+        <Loader />
+      ) : (
+        <MapView
+          ref={mapref}
+          style={tw`h-full`}
+          mapType="mutedStandard"
+          initialRegion={{
+            latitude: command?.startLocation?.location.lat
+              ? command?.startLocation?.location.lat
+              : 3.8078893,
+            longitude: command?.startLocation?.location.lng
+              ? command?.startLocation?.location.lng
+              : 11.5560279,
+            latitudeDelta: 0.005,
+            longitudeDelta: 0.005,
+          }}
+        >
+          {!!command?.startLocation?.location && (
+            <Marker
+              coordinate={{
+                latitude: command?.startLocation?.location.lat,
+                longitude: command?.startLocation?.location.lng,
+              }}
+              title="Origin"
+              identifier="origin"
+            >
+              <Image
+                source={require("../assets/pin.png")}
+                style={{ width: 40, height: 40 }}
+              />
+            </Marker>
+          )}
+          {!!command?.destinationLocation?.location && (
+            <Marker
+              coordinate={{
+                latitude: command?.destinationLocation?.location.lat,
+                longitude: command?.destinationLocation?.location.lng,
+              }}
+              title="Destination"
+              identifier="Destination"
+            />
+          )}
+          {!!command?.destinationLocation?.description &&
+            !!command?.startLocation?.description && (
+              <MapViewDirections
+                origin={command?.startLocation.description}
+                destination={command?.destinationLocation.description}
+                apikey={GOOGLE_MAPS_APIKEY}
+                strokeWidth={3}
+                strokeColor="blue"
               />
             )}
-            {drivers.map((item) => {
-              return (
-                <Marker
-                  coordinate={{
-                    latitude: item?.position.latitude,
-                    longitude: item?.position.longitude,
-                  }}
-                  title="driver"
-                  description={item.description}
-                  identifier={item.id}
-                >
-                  <Image
-                    source={require("../assets/taxi.png")}
-                    style={{ width: 40, height: 40 }}
-                  />
-                </Marker>
-              );
-            })}
-            {!!destinationLocation?.description &&
-              !!startLocation?.description && (
-                <MapViewDirections
-                  origin={startLocation.description}
-                  destination={destinationLocation.description}
-                  apikey={GOOGLE_MAPS_APIKEY}
-                  strokeWidth={3}
-                  strokeColor="blue"
-                />
-              )} */}
+        </MapView>
+      )}
 
-            {/* {destination?.location && (
-                <Marker
-                  coordinate={{
-                    latitude: destination.location.lat,
-                    longitude: destination.location.lng,
-                  }}
-                  title="Origin"
-                  description={destination.description}
-                  identifier="destination"
-                />
-              )} */}
-          </MapView>
-        )}
+      <TouchableOpacity
+        onPress={async () => {
+          const userInfo = await getVariable("userInfo");
+          if (userInfo.driver) {
+            navigation.navigate("DriverHomeScreen");
+          } else {
+            navigation.navigate("UserHomeScreen");
+          }
+        }}
+        style={styles.show}
+      >
+        <MaterialIcons name="chevron-left" size={30} />
+      </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => setShow(!show)} style={styles.show}>
-          {show ? (
-            <MaterialIcons name="location-pin" size={30} />
-          ) : (
-            <MaterialIcons name="close" size={30} />
-          )}
-        </TouchableOpacity>
+      <TouchableOpacity
+        onPress={() => {
+          setVariable(null, "userInfo");
 
-        <TouchableOpacity
-          onPress={() => {
-            setVariable(null, "userInfo")
-            
-        dispatch(setUserInfo(null))
-            }}
-          style={styles.logout}
-        >
-          <MaterialIcons name="logout" size={30} />
-        </TouchableOpacity>
-        {!show ? (
-          <>
-            <View style={styles.BottomSheet}>
-              <Button title="Print" onPress={print} />
-              <Button title="Print to PDF file" onPress={printToFile} />
-            </View>
-          </>
-        ) : null}
-      </View>
+          dispatch(setUserInfo(null));
+        }}
+        style={styles.logout}
+      >
+        <MaterialIcons name="logout" size={30} />
+      </TouchableOpacity>
+      {show ? (
+        <>
+          <View style={styles.BottomSheet}>
+            {completed ? (
+              <TouchableOpacity
+                onPress={setAsCompleted}
+                style={tw`mt-2 bg-blue-400 p-4 rounded-md`}
+              >
+                <Text style={tw`self-center text-white`}>
+                  Mark as completed
+                </Text>
+              </TouchableOpacity>
+            ) : null}
+
+            <TouchableOpacity
+              onPress={print}
+              style={tw`mt-4 bg-white p-4 rounded-md border border-gray-300`}
+            >
+              <Text style={tw`self-center text-black`}>
+                Print and Save Receipt
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={printToFile}
+              style={tw`mt-4 bg-white p-4 rounded-md border border-gray-300`}
+            >
+              <Text style={tw`self-center text-black`}>Share Receipt</Text>
+            </TouchableOpacity>
+          </View>
+        </>
+      ) : null}
+    </View>
   );
 }
 
@@ -228,7 +294,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     width: "100%",
     bottom: 0,
-    height: "40%",
+    height: "20%",
     borderTopEndRadius: 30,
     borderTopLeftRadius: 30,
     padding: 20,

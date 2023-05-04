@@ -41,7 +41,7 @@ import {
 import { auth, database } from "../firebase";
 import { setUserInfo } from "../slices/authSlice";
 
-const Map = ({navigation}) => {
+const Map = ({ navigation }) => {
   const origin = useSelector(selectOrigin);
   const destination = useSelector(selectDestination);
   const mapref = useRef(null);
@@ -51,7 +51,7 @@ const Map = ({navigation}) => {
   const [startLocation, setStartLocation] = useState(null);
   const [destinationLocation, setDestinationLocation] = useState(null);
   const [step, setStep] = useState(1);
-  const [show, setShow] = useState(false);
+  const [show, setShow] = useState(true);
 
   const getAllDrivers = () => {
     setLoading(true);
@@ -73,10 +73,10 @@ const Map = ({navigation}) => {
     const unsubscribe = onSnapshot(q, (snapshot) => {
       setDrivers(
         snapshot.docs.reduce((prev, next) => {
-          if(next?.data()?.visibility === true){
-            return [...prev, next.data()]
-          }else{
-            return prev
+          if (next?.data()?.visibility === true) {
+            return [...prev, next.data()];
+          } else {
+            return prev;
           }
         }, [])
       );
@@ -111,7 +111,7 @@ const Map = ({navigation}) => {
           ref={mapref}
           style={tw`flex-1`}
           mapType="mutedStandard"
-          initialRegion={{
+          region={{
             latitude: startLocation?.location.lat,
             longitude: startLocation?.location.lng,
             latitudeDelta: 0.005,
@@ -185,32 +185,33 @@ const Map = ({navigation}) => {
           )} */}
         </MapView>
       )}
-
-      <TouchableOpacity onPress={() => setShow(!show)} style={styles.show}>
-        {show ? (
-          <MaterialIcons name="location-pin" size={30} />
-        ) : (
-          <MaterialIcons name="close" size={30} />
-        )}
-      </TouchableOpacity>
+{/* 
+        <TouchableOpacity onPress={() => setShow(!show)} style={styles.show}>
+          {!show ? (
+            <MaterialIcons name="location-pin" size={30} />
+          ) : (
+            <MaterialIcons name="close" size={30} />
+          )}
+        </TouchableOpacity> */}
 
       <TouchableOpacity
         onPress={() => {
-          setVariable(null, "userInfo")
-          
-        dispatch(setUserInfo(null))
-          }}
+          setVariable(null, "userInfo");
+
+          dispatch(setUserInfo(null));
+        }}
         style={styles.logout}
       >
         <MaterialIcons name="logout" size={30} />
       </TouchableOpacity>
-      {!show ? (
+      {show ? (
         <>
           <View style={styles.BottomSheet}>
             {step === 1 ? (
-              <ScrollView>
+              <ScrollView keyboardShouldPersistTaps="always">
                 <View>
                   <TouchableOpacity
+                    disabled={!!!startLocation}
                     onPress={() => setStep(step + 1)}
                     style={styles.currentLocation}
                   >
@@ -224,9 +225,10 @@ const Map = ({navigation}) => {
               </ScrollView>
             ) : null}
             {step === 2 ? (
-              <ScrollView>
+              <ScrollView keyboardShouldPersistTaps="always">
                 <View>
                   <TouchableOpacity
+                    disabled={!!!destinationLocation}
                     onPress={() => setStep(step + 1)}
                     style={styles.currentLocation}
                   >
@@ -286,7 +288,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     width: "100%",
     bottom: 0,
-    height: "40%",
+    height: "50%",
     borderTopEndRadius: 30,
     borderTopLeftRadius: 30,
     padding: 20,

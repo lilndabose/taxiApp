@@ -25,7 +25,7 @@ import { getVariable } from "../services/AsyncStorageMethods";
 import commandService from "../api/commandService";
 import Loader from "./Loader";
 
-const Visible = ({ userInfo, setVisibility , navigation}) => {
+const Visible = ({ userInfo, setVisibility, navigation }) => {
   const dispatch = useDispatch();
   const [waiting, setWaiting] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -79,22 +79,20 @@ const Visible = ({ userInfo, setVisibility , navigation}) => {
     const q = query(collectionRef);
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
+      let exit = false;
       snapshot.docs.map((doc) => {
-        if (
-          doc?.data().driverId === userInfo.id &&
-          doc?.data().status === "pending"
-        ) {
-          setCommand(doc.data());
-        } else {
-          if (
-            doc?.data().driverId === userInfo.id &&
-            doc?.data().status === "cancel"
-          ) {
-            setCommand(null);
-            setWaiting(false);
+        if (doc?.data().driverId === userInfo.id) {
+          exit = true;
+          if (doc?.data().status === "pending") {
+            setCommand(doc.data());
           }
         }
       });
+
+      if (!exit) {
+        setCommand(null);
+        setWaiting(false);
+      }
     });
     return () => unsubscribe();
   }, []);
@@ -106,7 +104,7 @@ const Visible = ({ userInfo, setVisibility , navigation}) => {
         ...command,
         status: "cancel",
       };
-      var res = await commandService.updateCommand(datas);
+      var res = await commandService.deleteCommand(datas);
       setLoading(false);
       if (res.statusCode == 200) {
         setCommand(null);

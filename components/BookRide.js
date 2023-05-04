@@ -171,22 +171,20 @@ function BookRide({ drivers, startLocation, destinationLocation, navigation }) {
     const q = query(collectionRef);
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
+      let exit = false;
       snapshot.docs.map((doc) => {
-        if (
-          doc?.data().userId === userInfo.id &&
-          doc?.data().status === "cancel"
-        ) {
-          if (
-            doc?.data().userId === userInfo.id &&
-            doc?.data().status === "accepted"
-          ) {
-            navigation.navigate("TrackingScreen", { command: res.data });
-          }else{
-            setCommand(null)
-            setWaiting(false)
+        if (doc?.data().userId === userInfo.id) {
+          if (doc?.data().status === "accepted") {
+            navigation.navigate("TrackingScreen", { command: doc?.data() });
           }
+          exit = true;
         }
       });
+
+      if (!exit) {
+        setCommand(null);
+        setWaiting(false);
+      }
     });
     return () => unsubscribe();
   }, []);
@@ -276,7 +274,7 @@ function BookRide({ drivers, startLocation, destinationLocation, navigation }) {
         ...command,
         status: "cancel",
       };
-      var res = await commandService.updateCommand(datas);
+      var res = await commandService.deleteCommand(datas);
       setLoading(false);
       if (res.statusCode == 200) {
         setCommand(null);
