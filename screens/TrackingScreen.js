@@ -8,6 +8,8 @@ import { setVariable } from "../services/AsyncStorageMethods";
 import * as Print from "expo-print";
 import { shareAsync } from "expo-sharing";
 import tw from "tailwind-react-native-classnames";
+import { setUserInfo } from "../slices/authSlice";
+import { useDispatch } from "react-redux";
 
 const html = `
 <!DOCTYPE html>
@@ -65,6 +67,7 @@ function TrackingScreen({ route }) {
 //   console.log("command", route.params);
   const [selectedPrinter, setSelectedPrinter] = useState();
   const [show, setShow] = useState(false)
+  const dispatch = useDispatch();
   
   const mapref = useRef(null);
 
@@ -182,7 +185,11 @@ function TrackingScreen({ route }) {
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={() => setVariable(null, "userInfo")}
+          onPress={() => {
+            setVariable(null, "userInfo")
+            
+        dispatch(setUserInfo(null))
+            }}
           style={styles.logout}
         >
           <MaterialIcons name="logout" size={30} />

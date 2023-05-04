@@ -39,6 +39,7 @@ import {
   onSnapshot,
 } from "firebase/firestore";
 import { auth, database } from "../firebase";
+import { setUserInfo } from "../slices/authSlice";
 
 const Map = ({navigation}) => {
   const origin = useSelector(selectOrigin);
@@ -194,7 +195,11 @@ const Map = ({navigation}) => {
       </TouchableOpacity>
 
       <TouchableOpacity
-        onPress={() => setVariable(null, "userInfo")}
+        onPress={() => {
+          setVariable(null, "userInfo")
+          
+        dispatch(setUserInfo(null))
+          }}
         style={styles.logout}
       >
         <MaterialIcons name="logout" size={30} />

@@ -17,13 +17,19 @@ import { setVariable } from "../services/AsyncStorageMethods";
 function DriverHomeScreen({navigation}) {
   const [visibility, setVisibility] = useState(false);
   const userInfo = useSelector(selectAuthUser);
+  const dispatch = useDispatch();
   
 
   return (
     <View style={tw`bg-white w-full h-full p-8`}>
       <View style={tw`my-5 flex flex-row justify-between`}>
         <MaterialIcons name="menu" size={30} color={"black"} />
-        <MaterialIcons name="logout" size={30} color={"black"} onPress={() => setVariable(null, "userInfo")} />
+        <MaterialIcons name="logout" size={30} color={"black"} onPress={() => 
+        {
+        setVariable(null, "userInfo")
+        
+        dispatch(setUserInfo(null))
+        }} />
       </View>
       <View style={tw`w-full h-full items-center justify-center`}>
         {!visibility ? (
