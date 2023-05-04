@@ -7,6 +7,7 @@ import LoginScreen from "../screens/Authentication/LoginScreen";
 import RegisterScreen from "../screens/Authentication/RegisterScreen";
 import LandingScreen from "../screens/Authentication/LandingScreen";
 import UserHomeScreen from "../screens/UserHomeScreen";
+import TrackingScreen from "../screens/TrackingScreen";
 
 const Stack = createStackNavigator();
 
@@ -16,6 +17,13 @@ function DriverStack() {
       <Stack.Screen
         name="DriverHomeScreen"
         component={DriverHomeScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="TrackingScreen"
+        component={TrackingScreen}
         options={{
           headerShown: false,
         }}
@@ -44,6 +52,13 @@ function UserStack() {
       <Stack.Screen
         name="MapScreen"
         component={MapScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="TrackingScreen"
+        component={TrackingScreen}
         options={{
           headerShown: false,
         }}

@@ -4,7 +4,7 @@ import tw from "tailwind-react-native-classnames";
 
 function LandingScreen({ navigation }) {
   return (
-    <View style={tw`p-10`}>
+    <View style={tw`p-10 bg-white h-full `}>
       <Text style={tw`self-center mt-20 text-2xl font-bold`}>Welcome!</Text>
       <Text style={tw`self-center mb-2 text-gray-400`}>
         You need to create an account to login

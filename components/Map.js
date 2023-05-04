@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useLayoutEffect, useState } from "react";
 import {
   Button,
   Image,
@@ -29,8 +29,18 @@ import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplet
 import SearchLocation from "./SearchLoaction";
 import BookRide from "./BookRide";
 import { GOOGLE_MAPS_APIKEY } from "@env";
+import { setVariable } from "../services/AsyncStorageMethods";
 
-const Map = () => {
+import {
+  collection,
+  addDoc,
+  orderBy,
+  query,
+  onSnapshot,
+} from "firebase/firestore";
+import { auth, database } from "../firebase";
+
+const Map = ({navigation}) => {
   const origin = useSelector(selectOrigin);
   const destination = useSelector(selectDestination);
   const mapref = useRef(null);
@@ -40,6 +50,7 @@ const Map = () => {
   const [startLocation, setStartLocation] = useState(null);
   const [destinationLocation, setDestinationLocation] = useState(null);
   const [step, setStep] = useState(1);
+  const [show, setShow] = useState(false);
 
   const getAllDrivers = () => {
     setLoading(true);
@@ -54,6 +65,24 @@ const Map = () => {
       });
   };
 
+  useLayoutEffect(() => {
+    const collectionRef = collection(database, "users");
+    const q = query(collectionRef);
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setDrivers(
+        snapshot.docs.reduce((prev, next) => {
+          if(next?.data()?.visibility === true){
+            return [...prev, next.data()]
+          }else{
+            return prev
+          }
+        }, [])
+      );
+    });
+    return () => unsubscribe();
+  }, []);
+
   useEffect(() => {
     getAllDrivers();
     CurrentLocation().then((response) => {
@@ -61,7 +90,7 @@ const Map = () => {
         lng: response.coords.longitude,
         lat: response.coords.latitude,
       };
-      setStartLocation({location: temPosition});
+      setStartLocation({ location: temPosition });
     });
   }, []);
 
@@ -72,33 +101,9 @@ const Map = () => {
     console.log("destinationLocation", destinationLocation);
   }, [destinationLocation]);
 
-  //   useEffect(() => {
-  //     if (!origin || !destination) return;
-
-  //     //Zomm & fit to markers
-  //     mapref.current.fitToSuppliedMarkers(["origin", "destination"], {
-  //       edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
-  //     });
-  //   }, [origin, destination]);
-
-  //   useEffect(() => {
-  //     // if (!origin || !destination) return;
-
-  //     const getTravelTime = async () => {
-  //       fetch(
-  //         "https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=${origin.description}&destinations=${destination.description}&key=${GOOGLE_MAPS_APIKEY}"
-  //       )
-  //         .then((res) => res.json())
-  //         .then((data) => {
-  //           dispatch(selectTravelTimeInformation(data.rows[0].elements[0]));
-  //         });
-  //     };
-  //     getTravelTime();
-  //   }, [origin, destination, GOOGLE_MAPS_APIKEY]);
-
   return (
     <View style={tw`flex-1`}>
-      {!(!!startLocation) || loading ? (
+      {!!!startLocation || loading ? (
         <Loader />
       ) : (
         <MapView
@@ -137,31 +142,34 @@ const Map = () => {
               identifier="Destination"
             />
           )}
-          {drivers.map((item) => (
-            <Marker
-              coordinate={{
-                latitude: item?.position.latitude,
-                longitude: item?.position.longitude,
-              }}
-              title="driver"
-              description={item.description}
-              identifier={item.id}
-            >
-              <Image
-                source={require("../assets/taxi.png")}
-                style={{ width: 40, height: 40 }}
+          {drivers.map((item) => {
+            return (
+              <Marker
+                coordinate={{
+                  latitude: item?.position.latitude,
+                  longitude: item?.position.longitude,
+                }}
+                title="driver"
+                description={item.description}
+                identifier={item.id}
+              >
+                <Image
+                  source={require("../assets/taxi.png")}
+                  style={{ width: 40, height: 40 }}
+                />
+              </Marker>
+            );
+          })}
+          {!!destinationLocation?.description &&
+            !!startLocation?.description && (
+              <MapViewDirections
+                origin={startLocation.description}
+                destination={destinationLocation.description}
+                apikey={GOOGLE_MAPS_APIKEY}
+                strokeWidth={3}
+                strokeColor="blue"
               />
-            </Marker>
-          ))}
-          {!!destinationLocation?.description && !!startLocation?.description && step == 2 && (
-            <MapViewDirections
-              origin={startLocation.description}
-              destination={destinationLocation.description}
-              apikey={GOOGLE_MAPS_APIKEY}
-              strokeWidth={3}
-              strokeColor="blue"
-            />
-          )}
+            )}
 
           {/* {destination?.location && (
             <Marker
@@ -176,49 +184,75 @@ const Map = () => {
           )} */}
         </MapView>
       )}
-      <View style={styles.BottomSheet}>
-        {step === 1 ? (
-          <ScrollView>
-            <View>
-              <TouchableOpacity
-                onPress={() => setStep(step + 1)}
-                style={styles.currentLocation}
-              >
-                <MaterialIcons name="chevron-right" size={25} />
-              </TouchableOpacity>
-              <SearchLocation
-                setLocation={setStartLocation}
-                placeholder="Type your address here"
+
+      <TouchableOpacity onPress={() => setShow(!show)} style={styles.show}>
+        {show ? (
+          <MaterialIcons name="location-pin" size={30} />
+        ) : (
+          <MaterialIcons name="close" size={30} />
+        )}
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={() => setVariable(null, "userInfo")}
+        style={styles.logout}
+      >
+        <MaterialIcons name="logout" size={30} />
+      </TouchableOpacity>
+      {!show ? (
+        <>
+          <View style={styles.BottomSheet}>
+            {step === 1 ? (
+              <ScrollView>
+                <View>
+                  <TouchableOpacity
+                    onPress={() => setStep(step + 1)}
+                    style={styles.currentLocation}
+                  >
+                    <MaterialIcons name="chevron-right" size={25} />
+                  </TouchableOpacity>
+                  <SearchLocation
+                    setLocation={setStartLocation}
+                    placeholder="Type your address here"
+                  />
+                </View>
+              </ScrollView>
+            ) : null}
+            {step === 2 ? (
+              <ScrollView>
+                <View>
+                  <TouchableOpacity
+                    onPress={() => setStep(step + 1)}
+                    style={styles.currentLocation}
+                  >
+                    <MaterialIcons name="chevron-right" size={25} />
+                  </TouchableOpacity>
+                  <SearchLocation
+                    setLocation={setDestinationLocation}
+                    placeholder="Type Your destination"
+                  />
+                </View>
+              </ScrollView>
+            ) : null}
+            {step === 3 ? (
+              <BookRide
+                drivers={drivers}
+                startLocation={startLocation}
+                destinationLocation={destinationLocation}
+                navigation={navigation}
               />
-            </View>
-          </ScrollView>
-        ) : null}
-        {step === 2 ? (
-          <ScrollView>
-            <View>
+            ) : null}
+            {step > 1 ? (
               <TouchableOpacity
-                onPress={() => setStep(step + 1)}
-                style={styles.currentLocation}
+                onPress={() => setStep(step - 1)}
+                style={styles.backIcon}
               >
-                <MaterialIcons name="chevron-right" size={25} />
+                <MaterialIcons name="chevron-left" size={25} />
               </TouchableOpacity>
-              <SearchLocation
-                setLocation={setDestinationLocation}
-            placeholder="Type Your destination"
-              />
-            </View>
-          </ScrollView>
-        ) : null}
-        {step === 3 ? <BookRide /> : null}
-        {step > 1 ? (
-          <TouchableOpacity
-            onPress={() => setStep(step - 1)}
-            style={styles.backIcon}
-          >
-            <MaterialIcons name="chevron-left" size={25} />
-          </TouchableOpacity>
-        ) : null}
-      </View>
+            ) : null}
+          </View>
+        </>
+      ) : null}
     </View>
   );
 };
@@ -226,6 +260,22 @@ const Map = () => {
 export default Map;
 
 const styles = StyleSheet.create({
+  logout: {
+    position: "absolute",
+    backgroundColor: "white",
+    padding: 10,
+    top: 40,
+    borderRadius: 50,
+    right: 30,
+  },
+  show: {
+    position: "absolute",
+    backgroundColor: "white",
+    padding: 10,
+    top: 40,
+    borderRadius: 50,
+    left: 30,
+  },
   BottomSheet: {
     backgroundColor: "white",
     position: "absolute",
