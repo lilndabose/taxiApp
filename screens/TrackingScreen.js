@@ -230,44 +230,35 @@ function TrackingScreen({ route, navigation }) {
       <TouchableOpacity
         onPress={() => {
           setVariable(null, "userInfo");
-
           dispatch(setUserInfo(null));
         }}
         style={styles.logout}
       >
         <MaterialIcons name="logout" size={30} />
       </TouchableOpacity>
-      {show ? (
-        <>
-          <View style={styles.BottomSheet}>
-            {completed ? (
-              <TouchableOpacity
-                onPress={setAsCompleted}
-                style={tw`mt-2 bg-blue-400 p-4 rounded-md`}
-              >
-                <Text style={tw`self-center text-white`}>
-                  Mark as completed
-                </Text>
-              </TouchableOpacity>
-            ) : null}
+      <View style={styles.BottomSheet}>
+        {completed ? (
+          <TouchableOpacity
+            onPress={setAsCompleted}
+            style={tw`mt-2 bg-blue-400 p-4 rounded-md`}
+          >
+            <Text style={tw`self-center text-white`}>Mark as completed</Text>
+          </TouchableOpacity>
+        ) : null}
 
-            <TouchableOpacity
-              onPress={print}
-              style={tw`mt-4 bg-white p-4 rounded-md border border-gray-300`}
-            >
-              <Text style={tw`self-center text-black`}>
-                Print and Save Receipt
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={printToFile}
-              style={tw`mt-4 bg-white p-4 rounded-md border border-gray-300`}
-            >
-              <Text style={tw`self-center text-black`}>Share Receipt</Text>
-            </TouchableOpacity>
-          </View>
-        </>
-      ) : null}
+        <TouchableOpacity
+          onPress={print}
+          style={tw`mt-4 bg-white p-4 rounded-md border border-gray-300`}
+        >
+          <Text style={tw`self-center text-black`}>Print and Save Receipt</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={printToFile}
+          style={tw`mt-4 bg-white p-4 rounded-md border border-gray-300`}
+        >
+          <Text style={tw`self-center text-black`}>Share Receipt</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -294,7 +285,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     width: "100%",
     bottom: 0,
-    height: "20%",
+    height: "30%",
     borderTopEndRadius: 30,
     borderTopLeftRadius: 30,
     padding: 20,
