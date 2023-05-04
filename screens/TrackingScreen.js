@@ -1,5 +1,5 @@
-import React from "react";
-import { StyleSheet, Text, TouchableOpacity } from "react-native";
+import React, { useRef, useState } from "react";
+import { Button, StyleSheet, Text, TouchableOpacity } from "react-native";
 import { View } from "react-native";
 import Loader from "../components/Loader";
 import MapView from "react-native-maps";
@@ -7,6 +7,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { setVariable } from "../services/AsyncStorageMethods";
 import * as Print from "expo-print";
 import { shareAsync } from "expo-sharing";
+import tw from "tailwind-react-native-classnames";
 
 const html = `
 <!DOCTYPE html>
@@ -60,8 +61,12 @@ const html = `
 `;
 
 function TrackingScreen({ route }) {
-  const { command } = route.params;
-  console.log("command", route.params);
+//   const { command } = route.params;
+//   console.log("command", route.params);
+  const [selectedPrinter, setSelectedPrinter] = useState();
+  const [show, setShow] = useState(false)
+  
+  const mapref = useRef(null);
 
   const print = async () => {
     // On iOS/android prints the given html. On web prints the HTML from the current page.
@@ -84,17 +89,18 @@ function TrackingScreen({ route }) {
 
   return (
     <View>
-      <View style={tw`flex-1`}>
-        {!!command ? (
+        {false ? (
           <Loader />
         ) : (
           <MapView
             ref={mapref}
-            style={tw`flex-1`}
+            style={tw`h-full`}
             mapType="mutedStandard"
             initialRegion={{
-              latitude: command.startLocation?.location.lat,
-              longitude: command.startLocation?.location.lng,
+              //   latitude: command.startLocation?.location.lat,
+              latitude: 3.8078893,
+              //   longitude: command.startLocation?.location.lng,
+              longitude: 11.5560279,
               latitudeDelta: 0.005,
               longitudeDelta: 0.005,
             }}
@@ -190,7 +196,6 @@ function TrackingScreen({ route }) {
           </>
         ) : null}
       </View>
-    </View>
   );
 }
 

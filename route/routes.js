@@ -14,20 +14,21 @@ const Stack = createStackNavigator();
 function DriverStack() {
   return (
     <Stack.Navigator>
-      <Stack.Screen
+    
+    <Stack.Screen
         name="DriverHomeScreen"
         component={DriverHomeScreen}
         options={{
           headerShown: false,
         }}
       />
-      <Stack.Screen
-        name="TrackingScreen"
-        component={TrackingScreen}
-        options={{
-          headerShown: false,
-        }}
-      />
+    <Stack.Screen
+      name="TrackingScreen"
+      component={TrackingScreen}
+      options={{
+        headerShown: false,
+      }}
+    />
     </Stack.Navigator>
   );
 }
